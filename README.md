@@ -1,6 +1,7 @@
 # Information-Visualization-Project
 
 ### Twitch Streamer Analysis
+🖇  https://yeonjaekim99.github.io/Information-Visualization-Project/index.html
 #### This project visualizes the results of analyzing the Top 1000 streamer data on the Twitch platform.
 <img width="30%" src="https://user-images.githubusercontent.com/56298796/169791414-53948376-e4a1-43a7-9d89-8b0f315471a6.jpg"/>
 
