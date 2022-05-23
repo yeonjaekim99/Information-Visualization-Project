@@ -115,7 +115,7 @@
             dataTable.update(clickedData && clickedData.length > 0 ? clickedData : data, keep)
         }
 
-        d3.csv("https://raw.githubusercontent.com/yeonjaekim99/Information-Visualization-Project/main/twitchdata.csv")
+        d3.csv("https://raw.githubusercontent.com/yeonjaekim99/Information-Visualization-Project/main/data/twitchdata.csv")
             .then(csvData => {
                 csvData.forEach(d => {
                     d["Rank"] = +d["Rank"];
