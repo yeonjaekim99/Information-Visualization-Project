@@ -4,16 +4,16 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="assets/twitch_character.ico" rel="shortcut icon" type="image/x-icon">
+    <link href="../assets/twitch_character.ico" rel="shortcut icon" type="image/x-icon">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.min.js"></script>
-    <script src="components/scatterplot.js"></script>
-    <script src="components/piechart.js"></script>
-    <script src="components/datatable.js"></script>
+    <script src="../components/scatterplot.js"></script>
+    <script src="../components/piechart.js"></script>
+    <script src="../components/datatable.js"></script>
 
 
     <title>Twitch Streamer Statics</title>
@@ -22,18 +22,23 @@
             background: #9147ff;
             overflow-y: scroll;
         }
-
+        
         .container {
             width: 800px;
             background: white;
         }
-
-        /* In the <style> tag in index.html */
+        
         .brushed {
             stroke-width: 1;
-            stroke: darkred;
+            stroke: black;
             r: 3;
-        }        
+        } 
+        
+        div.controls {
+            float: right;
+            margin-left: 320px;
+            color: grey;
+        }
     </style>
 </head>
 
@@ -42,7 +47,7 @@
         <img src="assets/twitch_logo.jpg" width="300">
         <nav class="container navbar navbar-light bg-light">
             <div class="container-fluid">
-                <span class="navbar-brand mb-0 h1">Twitch Streamer Statics</span>
+                <span class="navbar-brand mb-0 h1"><b>Twitch Streamer Statics</b></span>
             </div>
         </nav>
 
@@ -62,6 +67,10 @@
                     <input class="form-check-input" type="radio" name="x-encoding" value="Average viewers" id="x-sw">
                     <label class="form-check-label" for="x-sw">Average Viewers</label>
                 </div>
+            </div>
+            <div class="controls">
+                <input id="Zoom" type="checkbox" value="zoom"></input>
+                <label for="zoom">Zoom</label>
             </div>
         </div>
         <div class="text-center">
@@ -89,17 +98,21 @@
     </main>
 
     <script>
-        let data, brushedData, scatterplot, piechart, dataTable;
+        let data, brushedData, clickedData, scatterplot, piechart, dataTable;
         const keep = ['Rank', 'Channel', 'Followers', 'Followers gained', 'Average viewers', 'Mature', 'Language'];
 
         function updateScatterplot() {
-            let xVar = d3.select("input[type=radio][name=x-encoding]:checked").property("value");
-            let yVar = "Followers";
+            let xVar = "Followers";
+            let yVar = d3.select("input[type=radio][name=x-encoding]:checked").property("value");
             scatterplot.update(xVar, yVar, "Mature");
         }
 
         function updateDataTable() {
             dataTable.update(brushedData && brushedData.length > 0 ? brushedData : data, keep)
+        }
+
+        function clickUpdateDataTable() {
+            dataTable.update(clickedData && clickedData.length > 0 ? clickedData : data, keep)
         }
 
         d3.csv("https://raw.githubusercontent.com/yeonjaekim99/Information-Visualization-Project/main/data/twitchdata.csv")
@@ -115,13 +128,19 @@
                 data = temp.map(row => [...keep].reduce((acc, v) => ({ ...acc, [v]: row[v] }), {}));
                 data.splice(34,1);
 
+                // data table
+                dataTable = new DataTable("#data-table");
+                updateDataTable();
+
                 // pie chart
                 piechart = new Piechart("#piechart", data);
                 piechart.initialize();
 
-                // data table
-                dataTable = new DataTable("#data-table");
-                updateDataTable();
+                // pie chart click event
+                piechart.on("click", (clickedItems) =>{
+                    clickedData= clickedItems;
+                    clickUpdateDataTable();
+                });
 
                 // scatter plot
                 scatterplot = new Scatterplot("#scatterplot", data);
@@ -134,6 +153,10 @@
                     brushedData= brushedItems;
                     updateDataTable();
                 });
+
+                d3.select("#Zoom").on("click", function() {
+                    updateScatterplot();
+                })
 
             })
     </script>
