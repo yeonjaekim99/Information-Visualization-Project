@@ -19,7 +19,7 @@ class Scatterplot {
         this.yAxis = this.svg.append("g");
         this.legend = this.svg.append("g");
 
-        this.xScale = d3.scaleLinear();
+        this.xScale = d3.scaleLog();
         this.yScale = d3.scaleLinear();
         this.zScale = d3.scaleOrdinal().range(d3.schemeCategory10);
 
@@ -49,7 +49,7 @@ class Scatterplot {
             .attr("y", -this.margin.left + 10)
             .attr("fill", "black")
             .style("font-size", "1.4em")
-            .text(d3.select("input[type=radio][name=x-encoding]:checked").property("value"))
+            .text(d3.select("input[type=radio][name=x-encoding]:checked").property("value")+" / Followers")
             .style("transform", "rotate(-90deg)")
             .style("text-anchor", "middle");
         
@@ -59,9 +59,23 @@ class Scatterplot {
         this.xVar = xVar;
         this.yVar = yVar;
 
-        this.xScale.domain(d3.extent(this.data, d => d[xVar])).range([0, this.width]);
-        this.yScale.domain(d3.extent(this.data, d => d[yVar])).range([this.height, 0]);
-        this.zScale.domain(['FALSE', 'TRUE']);
+        this.xScale 
+        	.domain([25000,9000000])
+        	.range([0, this.width]);
+            
+        if(this.yVar === "Followers gained"){
+            this.yScale.domain(d3.extent(this.data, d => d[yVar]/d[xVar])).range([this.height, 0]);
+        }
+        else{
+            if(document.getElementById('Zoom').checked){
+                this.yScale.domain([0, 0.04]).range([this.height, 0]);
+            }
+            else{
+                this.yScale.domain([0, 0.25]).range([this.height, 0]);
+            }
+        }
+       
+        this.zScale.domain(['FALSE', 'TRUE']).range(["#27aae1", "#ef404a"]);
 
         this.circles = this.container.selectAll("circle")
             .data(data)
@@ -70,9 +84,9 @@ class Scatterplot {
         this.circles
             .transition()
             .attr("cx", d => this.xScale(d[xVar]))
-            .attr("cy", d => this.yScale(d[yVar]))
+            .attr("cy", d => this.yScale(d[yVar]/d[xVar]))
             .attr("fill", d => this.zScale(d[colorVar]))
-            .attr("r", 2)
+            .attr("r", 3)
 
 
         this.container.call(this.brush);
@@ -82,15 +96,20 @@ class Scatterplot {
         this.xAxis
             .attr("transform", `translate(${this.margin.left}, ${this.margin.top + this.height})`)
             .transition()
-            .call(d3.axisBottom(this.xScale).tickFormat(function(d) { return formatValue(d); }));
+            .call(d3.axisBottom(this.xScale)
+                .ticks(2)
+                .tickFormat(function(d) { 
+                    return formatValue(d); 
+                }
+            ));
 
         this.yAxis
             .attr("transform", `translate(${this.margin.left}, ${this.margin.top})`)
             .transition()
-            .call(d3.axisLeft(this.yScale).tickFormat(function(d) { return formatValue(d); }));
+            .call(d3.axisLeft(this.yScale));
 
         this.ylabel
-            .text(d3.select("input[type=radio][name=x-encoding]:checked").property("value"));            
+            .text(d3.select("input[type=radio][name=x-encoding]:checked").property("value")+" / Followers");            
         
         this.legend
             .style("display", "inline")
@@ -105,13 +124,12 @@ class Scatterplot {
         let [[x0, y0], [x1, y1]] = selection;
 
         let x= this.xScale(d[this.xVar]);
-        let y= this.yScale(d[this.yVar]);
+        let y= this.yScale(d[this.yVar]/d[this.xVar]);
         return x0<= x&& x<= x1&& y0<= y&& y<= y1;
     }
 
     brushCircles(event) {
         let selection = event.selection;
-
         this.circles.classed("brushed", d => this.isBrushed(d, selection));
 
         if (this.handlers.brush)
